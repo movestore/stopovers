@@ -1,0 +1,86 @@
+{
+  "settings": [
+    {
+      "id": "duration",
+      "name": "Minimum stopover duration",
+      "description": "Insert minimum duration (in s) that your animal has to be in a refined area to be considered stopover. If stopover radius is given, default here to 24 h = 1 day.",
+      "defaultValue": null,
+      "type": "DOUBLE"
+    },
+    {
+      "id": "radius",
+      "name": "Maximum stopover radius",
+      "description": "Insert maximum radius (in m) of an area that your animal has to be refined to for being considered stopover. If stopover duration is given, default here to 10000 m = 10 km.",
+      "defaultValue": null,
+      "type": "DOUBLE"
+    }
+  ],
+  "dependencies": {
+    "R": [
+      {
+        "name": "move"
+      },
+      {
+        "name": "foreach"
+      },
+      {
+        "name": "maps"
+      },
+      {
+        "name": "lubridate"
+      }
+    ]
+  },
+  "createsArtifacts": true,
+  "license": {
+    "key": "MIT"
+  },
+  "language": "eng",
+  "keywords": [
+	"segmentation",
+    "stopover",
+	"stopover site",
+	"migration",
+    "rest",
+    "filter",
+    "movebank"
+  ],
+  "people": [
+    {
+      "firstName": "Andrea",
+      "middleInitials": null,
+      "lastName": "Kölzsch",
+      "email": "akoelzsch@ab.mpg.de",
+      "roles": ["compiler","author","creator"],
+      "orcid": "0000-0003-0193-1563",
+      "affiliation": "Max-Planck-Institute of Animal Behavior",
+      "affiliationRor": "https://ror.org/026stee22"
+    },
+	{
+      "firstName": "Stef",
+      "middleInitials": null,
+      "lastName": "Sijben",
+      "email": ,
+      "roles": ["author"],
+      "orcid": "",
+      "affiliation": "University of Bochum",
+      "affiliationRor": ""
+    }
+  ],
+  "funding": [
+    {
+	"name": "Knobloch Family Foundation",
+	"comment": "grant for Migration Mapper (MPIAB)"
+	}
+  ],
+  "references": [
+	{
+	"type": "IsDescribedBy",
+	"note": "Buchin, M., H. Kruckenberg, A. Kölzsch (2012) Segmenting Trajectories based on Movement States. In: Advances in Spatial Data Handling. S. Timpf, P. Laube (eds.). Spinger. pp. 15-25",
+	"url": "https://link.springer.com/chapter/10.1007/978-3-642-32316-4_2"
+	}
+  ],
+  "documentation" : {
+    "url": "https://github.com/movestore/stopovers/blob/main/README.md"
+  }
+}
