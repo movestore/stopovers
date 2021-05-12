@@ -318,6 +318,7 @@ rFunction <- function(data, duration=NULL, radius=NULL)
       
       resi.move <- move(x=resi$LON,y=resi$LAT,time=as.POSIXct(resi$DEP, format="%Y-%m-%d %H:%M:%OS", tz="UTC"),data=resi,proj=CRS("+proj=longlat +ellps=WGS84"))
     }
+    names(stopover.sites) <- names(data.split)
     stopover.sites.nozero <- stopover.sites[unlist(lapply(stopover.sites, length) > 0)] #remove IDs with no data
     
     if (length(stopover.sites.nozero)==0) 
