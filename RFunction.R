@@ -304,7 +304,7 @@ rFunction <- function(data, duration=NULL, radius=NULL)
     }
     
     data.split <- move::split(data)
-    stopover.tab <- data.frame("ID"=character(),"ARR"=character(),"DEP"=character(),"LON"=numeric(),"LAT"=numeric(),"DUR"=numeric(),"RAD"=numeric())
+    stopover.tab <- data.frame("individual_local_identifier"=character(),"timestamp"=character(),"timestamps_dep"=character(),"location_long"=numeric(),"location_lat"=numeric(),"duration"=numeric(),"radius"=numeric(),"taxon_canonical_name"=character(),"sensor"=character())
     
     stopover.sites <- foreach(datai = data.split) %do% {
       res <- stopOvers(datai,duration,radius)
@@ -313,10 +313,14 @@ rFunction <- function(data, duration=NULL, radius=NULL)
       ID <- rep(namesIndiv(datai),length(res$iStart))
       DUR <- res$duration #in seconds
       
-      resi <- data.frame(ID,ARR,DEP,"LON"=res$cLong,"LAT"=res$cLat,DUR,"RAD"=res$radius)
+      nr <- length(DUR)
+      tax <- rep(idData(datai)$taxon_canonical_name,nr)
+      senso <- rep(as.character(sensor(datai)[1]),nr)
+      
+      resi <- data.frame("individual_local_identifier"=ID,"timestamp_arrival"=ARR,"timestamp_departure"=DEP,"location_long"=res$cLong,"location_lat"=res$cLat,"duration"=DUR,"radius"=res$radius,"taxon_canonical_name"=tax,"sensor"=senso)
       stopover.tab <- rbind(stopover.tab,resi)
       
-      resi.move <- move(x=resi$LON,y=resi$LAT,time=as.POSIXct(resi$DEP, format="%Y-%m-%d %H:%M:%OS", tz="UTC"),data=resi,proj=CRS("+proj=longlat +ellps=WGS84"))
+      resi.move <- move(x=resi$location_long,y=resi$location_lat,time=as.POSIXct(resi$timestamp_arrival, format="%Y-%m-%d %H:%M:%OS", tz="UTC"),data=resi,animal=resi$individual_local_identifier,sensor=resi$sensor,proj=CRS("+proj=longlat +ellps=WGS84"))
     }
     names(stopover.sites) <- names(data.split)
     stopover.sites.nozero <- stopover.sites[unlist(lapply(stopover.sites, length) > 0)] #remove IDs with no data
@@ -329,7 +333,7 @@ rFunction <- function(data, duration=NULL, radius=NULL)
     {
       result <- moveStack(stopover.sites.nozero)
       
-      names(stopover.tab) <- c("individual_local_identifier","arrival_timestamp","departure_timestamp","mid_longitude","mid_latitude","duration (s)","radius (m)")
+      names(stopover.tab)[4:7] <- c("mid_longitude","mid_latitude","duration (s)","radius (m)")
       
       write.csv(stopover.tab,file = paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"stopover_sites.csv"),row.names=FALSE) #csv artefakt
       #write.csv(stopover.tab,file = "stopover_sites.csv",row.names=FALSE)

@@ -2,7 +2,7 @@ library(jsonlite)
 source("logger.R")
 source("RFunction.R")
 
-inputFileName = "input_lowres_geese_74X.rds" #important to set to NULL for movebank-download
+inputFileName = "TestFile_7XXgeese_Aug2021.rds" #important to set to NULL for movebank-download
 outputFileName = "output.rds"
 
 args <- list()
@@ -17,7 +17,7 @@ args <- list()
 #    args[["password"]] = "any-password"
 
 # Add your arguments of your r function here
-args[["duration"]] = NULL#s
+args[["duration"]] = 172800 #s
 args[["radius"]] = 	30000 #m 
 
 
