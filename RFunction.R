@@ -304,9 +304,9 @@ rFunction <- function(data, duration=NULL, radius=NULL)
     }
     
     data.split <- move::split(data)
-    stopover.tab <- data.frame("individual_local_identifier"=character(),"timestamp"=character(),"timestamps_dep"=character(),"location_long"=numeric(),"location_lat"=numeric(),"duration"=numeric(),"radius"=numeric(),"taxon_canonical_name"=character(),"sensor"=character())
+    stopover.tab <- data.frame("individual_local_identifier"=character(),"timestamp_arrival"=character(),"timestamps_departure"=character(),"location_long"=numeric(),"location_lat"=numeric(),"duration"=numeric(),"radius"=numeric(),"taxon_canonical_name"=character(),"sensor"=character())
     
-    stopover.sites <- foreach(datai = data.split) %do% {
+    foreach(datai = data.split) %do% {
       res <- stopOvers(datai,duration,radius)
       ARR <- timestamps(datai)[res$iStart]
       DEP <- timestamps(datai)[res$iEnd]
@@ -319,10 +319,16 @@ rFunction <- function(data, duration=NULL, radius=NULL)
       
       resi <- data.frame("individual_local_identifier"=ID,"timestamp_arrival"=ARR,"timestamp_departure"=DEP,"location_long"=res$cLong,"location_lat"=res$cLat,"duration"=DUR,"radius"=res$radius,"taxon_canonical_name"=tax,"sensor"=senso)
       stopover.tab <- rbind(stopover.tab,resi)
-      
-      resi.move <- move(x=resi$location_long,y=resi$location_lat,time=as.POSIXct(resi$timestamp_arrival, format="%Y-%m-%d %H:%M:%OS", tz="UTC"),data=resi,animal=resi$individual_local_identifier,sensor=resi$sensor,proj=CRS("+proj=longlat +ellps=WGS84"))
+    }  
+     
+    stopover.tab.list <- as.list(data.frame(t(stopover.tab)))
+     
+    stopover.sites <- foreach(stopoveri = stopover.tab.list) %do% {
+      dataj <- data.split[[which(names(data.split)==stopoveri[1])]]
+      dataj[timestamps(dataj)>=as.POSIXct(stopoveri[2]) & timestamps(dataj)<=as.POSIXct(stopoveri[3])]
     }
-    names(stopover.sites) <- names(data.split)
+    names(stopover.sites) <- names(stopover.tab.list)      
+
     stopover.sites.nozero <- stopover.sites[unlist(lapply(stopover.sites, length) > 0)] #remove IDs with no data
     
     if (length(stopover.sites.nozero)==0) 
