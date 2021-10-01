@@ -5,7 +5,7 @@ library('lubridate')
 
 rFunction <- function(data, duration=NULL, radius=NULL)
 {
-  Sys.setenv(tz="GMT")
+  Sys.setenv(tz="UTC")
   
   n.all <- length(timestamps(data))
   data <- data[!duplicated(paste0(round_date(timestamps(data), "5 min"), trackId(data))),]
