@@ -3,6 +3,8 @@ library('maps')
 library('foreach')
 library('lubridate')
 
+#does not work for lon=lat=0 (errors)
+
 rFunction <- function(data, duration=NULL, radius=NULL)
 {
   Sys.setenv(tz="UTC")
@@ -197,13 +199,17 @@ rFunction <- function(data, duration=NULL, radius=NULL)
         }
         
         P <- unique(P) # Duplicate points cause trouble; filter them
-        # Randomly permute points
-        # Start with subtrajectory endpoints as a heuristic
-        perm <- c(1,nrow(P),1+sample(seq_len(nrow(P)-2),size=nrow(P)-2,replace=FALSE))
-        P <- P[perm,]
-        
-        # Compute disc
-        disc <- miniDiscWithPoints(i=nrow(P), Q=matrix(double(0), ncol=ncol(P)))
+        # if only one unique location, then same disc as if only one location at the beginning
+        if (nrow(P)==1) disc <- c(P, 0) else
+        {
+          # Randomly permute points
+          # Start with subtrajectory endpoints as a heuristic
+          perm <- c(1,nrow(P),1+sample(seq_len(nrow(P)-2),size=nrow(P)-2,replace=FALSE))
+          P <- P[perm,]
+          
+          # Compute disc
+          disc <- miniDiscWithPoints(i=nrow(P), Q=matrix(double(0), ncol=ncol(P)))
+        }
       }
       
       # Clean result and return
