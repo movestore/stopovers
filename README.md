@@ -19,7 +19,7 @@ moveStack in Movebank format
 moveStack in Movebank format
 
 ### Artefacts
-`stopover_sites.csv`: csv-file with Table of all individuals' stopover sites and their properties (arrival, departure, mid location, stopover duration and radius)
+`stopover_sites.csv`: .csv-file with Table of all individuals' stopover sites and their properties (arrival, departure, mid location, stopover duration and radius)
 
 ### Parameters 
 `duration`: Defined minimum duration that the animal has to stay in a given radius for it to be considered a stopover site. Unit: `seconds`.
