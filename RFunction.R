@@ -349,7 +349,7 @@ rFunction <- function(data, duration=NULL, radius=NULL)
     {
       result <- moveStack(stopover.sites.nozero)
       
-      names(stopover.tab)[4:7] <- c("mid.longitude","mid.latitude","duration (s)","radius (m)")
+      names(stopover.tab)[5:8] <- c("mid.longitude","mid.latitude","duration (s)","radius (m)")
       
       write.csv(stopover.tab,file = paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"stopover_sites.csv"),row.names=FALSE) #csv artefakt
       #write.csv(stopover.tab,file = "stopover_sites.csv",row.names=FALSE)
