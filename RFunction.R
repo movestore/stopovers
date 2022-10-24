@@ -310,28 +310,32 @@ rFunction <- function(data, duration=NULL, radius=NULL)
     }
     
     data.split <- move::split(data)
-    stopover.tab <- data.frame("individual_local_identifier"=character(),"timestamp_arrival"=character(),"timestamps_departure"=character(),"location_long"=numeric(),"location_lat"=numeric(),"duration"=numeric(),"radius"=numeric(),"taxon_canonical_name"=character(),"sensor"=character())
+    stopover.tab <- data.frame("animal.ID"=character(),"individual.local.identifier"=character(),"timestamp.arrival"=character(),"timestamps.departure"=character(),"location.long"=numeric(),"location.lat"=numeric(),"duration"=numeric(),"radius"=numeric(),"taxon.canonical.name"=character(),"sensor"=character())
     
     foreach(datai = data.split) %do% {
+      
+      names(datai) <- make.names(names(datai),allow_=FALSE)
+      
       res <- stopOvers(datai,duration,radius)
       ARR <- timestamps(datai)[res$iStart]
       DEP <- timestamps(datai)[res$iEnd]
-      ID <- rep(namesIndiv(datai),length(res$iStart))
+      TR <- rep(namesIndiv(datai),length(res$iStart))
+      if (any(names(datai)=="individual.local.identifier")) ID <- datai@data$individual.local.identifier[res$iStart] else if (any(names(datai)=="local.identifier")) ID <- datai@data$local.identifier[res$iStart] else ID <- TR
       DUR <- res$duration #in seconds
       
       nr <- length(DUR)
       tax <- rep(idData(datai)$taxon_canonical_name,nr)
       senso <- rep(as.character(sensor(datai)[1]),nr)
       
-      resi <- data.frame("individual_local_identifier"=ID,"timestamp_arrival"=ARR,"timestamp_departure"=DEP,"location_long"=res$cLong,"location_lat"=res$cLat,"duration"=DUR,"radius"=res$radius,"taxon_canonical_name"=tax,"sensor"=senso)
+      resi <- data.frame("animal.ID"=ID,"individual.local.identifier"=TR,"timestamp.arrival"=ARR,"timestamp.departure"=DEP,"location.long"=res$cLong,"location.lat"=res$cLat,"duration"=DUR,"radius"=res$radius,"taxon.canonical.name"=tax,"sensor"=senso)
       stopover.tab <- rbind(stopover.tab,resi)
     }  
      
     stopover.tab.list <- as.list(data.frame(t(stopover.tab)))
      
     stopover.sites <- foreach(stopoveri = stopover.tab.list) %do% {
-      dataj <- data.split[[which(names(data.split)==stopoveri[1])]]
-      dataj[timestamps(dataj)>=as.POSIXct(stopoveri[2]) & timestamps(dataj)<=as.POSIXct(stopoveri[3])]
+      dataj <- data.split[[which(names(data.split)==stopoveri[2])]]
+      dataj[timestamps(dataj)>=as.POSIXct(stopoveri[3]) & timestamps(dataj)<=as.POSIXct(stopoveri[4])]
     }
     names(stopover.sites) <- names(stopover.tab.list)      
 
@@ -345,7 +349,7 @@ rFunction <- function(data, duration=NULL, radius=NULL)
     {
       result <- moveStack(stopover.sites.nozero)
       
-      names(stopover.tab)[4:7] <- c("mid_longitude","mid_latitude","duration (s)","radius (m)")
+      names(stopover.tab)[4:7] <- c("mid.longitude","mid.latitude","duration (s)","radius (m)")
       
       write.csv(stopover.tab,file = paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"stopover_sites.csv"),row.names=FALSE) #csv artefakt
       #write.csv(stopover.tab,file = "stopover_sites.csv",row.names=FALSE)
