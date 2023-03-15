@@ -1,4 +1,4 @@
-## Stopover Sites
+## Stopover Site Segmentation
 
 MoveApps
 
@@ -21,14 +21,14 @@ moveStack in Movebank format
 ### Artefacts
 `stopover_sites.csv`: .csv-file with Table of all individuals' stopover sites and their properties (arrival, departure, mid location, stopover duration and radius)
 
-### Parameters 
-`duration`: Defined minimum duration that the animal has to stay in a given radius for it to be considered a stopover site. Unit: `seconds`.
+### Settings 
+**Minimum stopover duration (`duration`):** Defined minimum duration that the animal has to stay in a given radius for it to be considered a stopover site. Unit: `seconds`.
 
-`radius`: Defined maximum radius the animal has to stay in for a given duration of time for it to be considered stopover site. Unit: `metres`.
+**Maximum stopover radius (`radius`):** Defined maximum radius the animal has to stay in for a given duration of time for it to be considered stopover site. Unit: `metres`.
 
 ### Null or error handling:
-**Parameter `duration`:** If no duration AND no radius are given, the input data set is returned with a warning. If no duraiton is given (NULL), but a radius is defined then a default duration of 86400 seconds = 24 hours = 1 day is set. 
+**Setting `duration`:** If no duration AND no radius are given, the input data set is returned with a warning. If no duraiton is given (NULL), but a radius is defined then a default duration of 86400 seconds = 24 hours = 1 day is set. 
 
-**Parameter `radius`:** If no radius AND no duration are given, the input data set is returned with a warning. If no radius is given (NULL), but a duration is defined then a default radius of 10000 m = 10 km is set. 
+**Setting `radius`:** If no radius AND no duration are given, the input data set is returned with a warning. If no radius is given (NULL), but a duration is defined then a default radius of 10000 m = 10 km is set. 
 
 **Data:** If there are no resting locations retained after all analyses, NULL is returned, likely leading to an error.
