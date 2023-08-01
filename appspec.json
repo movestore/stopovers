@@ -13,18 +13,25 @@
       "description": "Insert maximum radius (in m) of an area that your animal has to be refined to for being considered stopover. If stopover duration is given, default here to 10000 m = 10 km.",
       "defaultValue": null,
       "type": "DOUBLE"
+    },
+	{
+      "id": "annot",
+      "name": "Annotate full data set with 'stopover'",
+      "description": "Select if you want the full input data set returned, annotated with an attribute 'stopover' (entries 'move' or 'stopover). If not selected (and by default) an object is returned that contains one track per stopover and all locations of the stopover included. Movement location will be dropped in that case. ",
+      "defaultValue": false,
+      "type": "CHECKBOX"
     }
   ],
   "dependencies": {
     "R": [
       {
-        "name": "move"
+        "name": "move2"
       },
       {
         "name": "foreach"
       },
       {
-        "name": "maps"
+        "name": "sf"
       },
       {
         "name": "lubridate"
@@ -43,7 +50,7 @@
 	"migration",
     "rest",
     "filter",
-    "movebank"
+	"annotate"
   ],
   "people": [
     {

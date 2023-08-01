@@ -1,17 +1,15 @@
-library('move')
-library('maps')
+library('move2')
 library('foreach')
 library('lubridate')
+library('sf')
 
-#does not work for lon=lat=0 (errors)
-
-rFunction <- function(data, duration=NULL, radius=NULL)
+rFunction <- function(data, duration=NULL, radius=NULL,annot=FALSE)
 {
   Sys.setenv(tz="UTC")
   
-  n.all <- length(timestamps(data))
-  data <- data[!duplicated(paste0(round_date(timestamps(data), "5 min"), trackId(data))),]
-  logger.info(paste0("For better performance, the data have been thinned to max 5 minute resolution. From the total ",n.all," positions, the algorithm retained ",length(timestamps(data))," positions for calculation."))
+  n.all <- nrow(data)
+  data <- data[!duplicated(paste0(round_date(mt_time(data), "5 min"), mt_track_id(data))),]
+  logger.info(paste0("For better performance, the data have been thinned to max 5 minute resolution. From the total ",n.all," positions, the algorithm retained ",nrow(data)," positions for calculation."))
 
   if (is.null(duration) & is.null(radius)) 
   {
@@ -235,7 +233,7 @@ rFunction <- function(data, duration=NULL, radius=NULL)
       ## - Coordinates of disc center
       ## - Radius of the disc (in meters for lat/long coordinates)
       
-      if (length(grep("+proj=longlat", tr@proj4string, value = FALSE)) >= 1) {
+      if (length(grep("EPSG:4326", st_crs(tr), value = FALSE)) >= 1) {
         ## Lat/long coordinates
         dist <- dist.ll
         rSphere <- 6371008.8 # Mean Earth radius
@@ -247,8 +245,8 @@ rFunction <- function(data, duration=NULL, radius=NULL)
       }
       tMin <- as.difftime(tMin, units="secs")
       
-      ts <- tr@timestamps
-      tc <- tr@coords[,2:1] # Switch to lat/long format
+      ts <- mt_time(tr)
+      tc <- st_coordinates(tr)[,2:1] # Switch to lat/long format
       
       stopOvers <- data.frame(iStart=integer(),
                               iEnd=integer(),
@@ -309,50 +307,82 @@ rFunction <- function(data, duration=NULL, radius=NULL)
       stopOvers
     }
     
-    data.split <- move::split(data)
-    stopover.tab <- data.frame("animal.ID"=character(),"individual.local.identifier"=character(),"timestamp.arrival"=character(),"timestamps.departure"=character(),"location.long"=numeric(),"location.lat"=numeric(),"duration"=numeric(),"radius"=numeric(),"taxon.canonical.name"=character(),"sensor"=character())
+    data.split <- split(data,mt_track_id(data))
+    stopover.tab <- data.frame("animal_ID"=character(),"individual_local_identifier"=character(),"timestamp_arrival"=character(),"timestamp_departure"=character(),"location_long"=numeric(),"location_lat"=numeric(),"duration"=numeric(),"radius"=numeric(),"taxon_canonical_name"=character(),"sensor"=character())
     
     foreach(datai = data.split) %do% {
       
-      names(datai) <- make.names(names(datai),allow_=FALSE)
+      names(datai) <- make.names(names(datai),allow_=TRUE)
       
       res <- stopOvers(datai,duration,radius)
-      ARR <- timestamps(datai)[res$iStart]
-      DEP <- timestamps(datai)[res$iEnd]
-      TR <- rep(namesIndiv(datai),length(res$iStart))
-      if (any(names(datai)=="individual.local.identifier")) ID <- datai@data$individual.local.identifier[res$iStart] else if (any(names(datai)=="local.identifier")) ID <- datai@data$local.identifier[res$iStart] else ID <- TR
+      ARR <- mt_time(datai)[res$iStart]
+      DEP <- mt_time(datai)[res$iEnd]
+      TR <- rep(unique(mt_track_id(datai)),length(res$iStart))
+      if (any(names(datai)=="individual_local_identifier")) ID <- datai@data$individual_local_identifier[res$iStart] else
+        {
+        if (any(names(datai)=="local_identifier")) ID <- datai@data$local.identifier[res$iStart] else ID <- TR
+        }
       DUR <- res$duration #in seconds
       
       nr <- length(DUR)
-      tax <- rep(idData(datai)$taxon_canonical_name,nr)
-      senso <- rep(as.character(sensor(datai)[1]),nr)
+      if (any(names(mt_track_data(datai))=="taxon_canonical_name")) tax <- rep(mt_track_data(datai)$taxon_canonical_name,nr) else 
+        {
+        if (any(names(mt_track_data(datai))=="individual_taxon_canonical_name")) tax <- rep(mt_track_data(datai)$taxon_canonical_name,nr) else tax <- rep(NA,nr)
+        }
+      if (any(names(datai)=="sensor_type_id")) senso <- rep(as.character(datai$sensor_type_id)[1],nr) else senso <- rep(NA,nr)
       
-      resi <- data.frame("animal.ID"=ID,"individual.local.identifier"=TR,"timestamp.arrival"=ARR,"timestamp.departure"=DEP,"location.long"=res$cLong,"location.lat"=res$cLat,"duration"=DUR,"radius"=res$radius,"taxon.canonical.name"=tax,"sensor"=senso)
+      if (any(names(res)=="cLong")) LON <- res$cLong else
+      {
+        if (any(names(res)=="cX")) LON <- res$cX else LON <- NA
+      }
+      if (any(names(res)=="cLat")) LAT <- res$cLat else
+      {
+        if (any(names(res)=="cY")) LAT <- res$cY else LAT <- NA
+      }
+      
+      resi <- data.frame("animal_ID"=ID,"individual_local_identifier"=TR,"timestamp_arrival"=ARR,"timestamp_departure"=DEP,"location_long"=LON,"location_lat"=LAT,"duration"=DUR,"radius"=res$radius,"taxon_canonical_name"=tax,"sensor"=senso)
       stopover.tab <- rbind(stopover.tab,resi)
     }  
-     
-    stopover.tab.list <- as.list(data.frame(t(stopover.tab)))
-     
-    stopover.sites <- foreach(stopoveri = stopover.tab.list) %do% {
-      dataj <- data.split[[which(names(data.split)==stopoveri[2])]]
-      dataj[timestamps(dataj)>=as.POSIXct(stopoveri[3]) & timestamps(dataj)<=as.POSIXct(stopoveri[4])]
-    }
-    names(stopover.sites) <- names(stopover.tab.list)      
 
-    stopover.sites.nozero <- stopover.sites[unlist(lapply(stopover.sites, length) > 0)] #remove IDs with no data
-    
-    if (length(stopover.sites.nozero)==0) 
+    stopover.tab.list <- as.list(data.frame(t(stopover.tab)))
+    names(stopover.tab.list) <- paste(stopover.tab$individual_local_identifier,names(stopover.tab.list),sep="_")
+
+    if (annot==FALSE)
     {
-      logger.info("Your output file contains no positions/stopover sites. No csv saved. Return NULL.")
-      result <- NULL
-    } else 
+      logger.info("Your have selected to return an object with only locations within stopovers. Each stopover location object is returned as a separate track.")
+      
+      stopover.sites <- foreach(stopoveri = stopover.tab.list) %do% {
+      dataj <- data.split[[which(names(data.split)==stopoveri[2])]]
+      dataj[mt_time(dataj)>=as.POSIXct(stopoveri[3]) & mt_time(dataj)<=as.POSIXct(stopoveri[4]),]
+      }
+      names(stopover.sites) <- names(stopover.tab.list)      
+
+      if (length(stopover.sites)==0) 
+      {
+        logger.info("Your output file contains no positions/stopover sites. No csv saved. Return NULL.")
+        result <- NULL
+      } else 
+      {
+        if (length(stopover.sites)>1) result <- mt_stack(stopover.sites,.track_combine="rename") else result <- stopover.sites[[1]]
+        
+        names(stopover.tab)[5:8] <- c("mid_longitude","mid_latitude","duration (s)","radius (m)")
+        write.csv(stopover.tab,file = appArtifactPath("stopover_sites.csv"),row.names=FALSE) #csv artefakt
+      }
+    } else
     {
-      result <- moveStack(stopover.sites.nozero)
+      logger.info("Your have selected to return all input data with an additional attribute 'stopover' indicating if the respecitve location is in a 'stopover' or alternatively 'move's. The tracks are returned as in the input data.")
       
-      names(stopover.tab)[5:8] <- c("mid.longitude","mid.latitude","duration (s)","radius (m)")
+      data$stopover <- rep("move",nrow(data))
+      data.split <- split(data,mt_track_id(data))
       
-      write.csv(stopover.tab,file = paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"stopover_sites.csv"),row.names=FALSE) #csv artefakt
-      #write.csv(stopover.tab,file = "stopover_sites.csv",row.names=FALSE)
+      foreach (stopoveri = stopover.tab.list) %do% {
+        k <- which(names(data.split)==stopoveri[2])
+        data.split[[k]]$stopover[mt_time(data.split[[k]])>=as.POSIXct(stopoveri[3],format="%Y-%m-%d %H:%M:%S") & mt_time(data.split[[k]])<=as.POSIXct(stopoveri[4])] <- "stopover"
+      }
+      result <- mt_stack(data.split,.track_combine="rename")
+      
+      names(stopover.tab)[5:8] <- c("mid_longitude","mid_latitude","duration (s)","radius (m)")
+      write.csv(stopover.tab,file = appArtifactPath("stopover_sites.csv"),row.names=FALSE) #csv artefakt
     }
   }
   
