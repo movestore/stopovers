@@ -3,7 +3,7 @@
     {
       "id": "duration",
       "name": "Minimum stopover duration",
-      "description": "Insert minimum duration (in s) that your animal has to be in a refined area to be considered stopover. If stopover radius is given, default here to 86400 s = 24 h = 1 day.",
+      "description": "Insert minimum duration (in hours) that your animal has to be in a refined area to be considered stopover. If stopover radius is given, default here to 24 h = 1 day.",
       "defaultValue": null,
       "type": "DOUBLE"
     },

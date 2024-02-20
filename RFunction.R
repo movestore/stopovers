@@ -18,8 +18,8 @@ rFunction <- function(data, duration=NULL, radius=NULL,annot=FALSE)
   }
   if (is.null(duration) & !is.null(radius)) 
     {
-    logger.info(paste0("You have selected a stopover site radius of ",radius,"m, but no minimum stopover duration. We here use 1 day by default. If that is not what you need, please go back and configure the parameters."))
-    duration <- 24*3600
+    logger.info(paste0("You have selected a stopover site radius of ",radius,"m, but no minimum stopover duration. We here use 24 hours by default. If that is not what you need, please go back and configure the parameters."))
+    duration <- 24
     }
   if (!is.null(duration) & is.null(radius))
     {
@@ -28,7 +28,7 @@ rFunction <- function(data, duration=NULL, radius=NULL,annot=FALSE)
   }
   if (!is.null(duration) & !is.null(radius))
   {
-    logger.info(paste0("You have selected a minimum stopover duration of ",duration," seconds and a radius of ",radius," metres."))
+    logger.info(paste0("You have selected a minimum stopover duration of ",duration," hours and a radius of ",radius," metres."))
     
     ll2xyz <- function(ll) {
       ## Convert lat/long coordinates (in radians) to 3d Cartesian (on unit sphere)
@@ -314,7 +314,7 @@ rFunction <- function(data, duration=NULL, radius=NULL,annot=FALSE)
       
       names(datai) <- make.names(names(datai),allow_=TRUE)
       
-      res <- stopOvers(datai,duration,radius)
+      res <- stopOvers(datai,duration*3600,radius) #duration in hours transformed to seconds for sub-function
       ARR <- mt_time(datai)[res$iStart]
       DEP <- mt_time(datai)[res$iEnd]
       TR <- rep(unique(mt_track_id(datai)),length(res$iStart))
@@ -322,7 +322,7 @@ rFunction <- function(data, duration=NULL, radius=NULL,annot=FALSE)
         {
         if (any(names(datai)=="local_identifier")) ID <- datai@data$local.identifier[res$iStart] else ID <- TR
         }
-      DUR <- res$duration #in seconds
+      DUR <- res$duration/3600 #in hours
       
       nr <- length(DUR)
       if (any(names(mt_track_data(datai))=="taxon_canonical_name")) tax <- rep(mt_track_data(datai)$taxon_canonical_name,nr) else 
@@ -365,7 +365,7 @@ rFunction <- function(data, duration=NULL, radius=NULL,annot=FALSE)
       {
         if (length(stopover.sites)>1) result <- mt_stack(stopover.sites,.track_combine="rename") else result <- stopover.sites[[1]]
         
-        names(stopover.tab)[5:8] <- c("mid_longitude","mid_latitude","duration (s)","radius (m)")
+        names(stopover.tab)[5:8] <- c("mid_longitude","mid_latitude","duration (h)","radius (m)")
         write.csv(stopover.tab,file = appArtifactPath("stopover_sites.csv"),row.names=FALSE) #csv artefakt
       }
     } else
@@ -381,7 +381,7 @@ rFunction <- function(data, duration=NULL, radius=NULL,annot=FALSE)
       }
       result <- mt_stack(data.split,.track_combine="rename")
       
-      names(stopover.tab)[5:8] <- c("mid_longitude","mid_latitude","duration (s)","radius (m)")
+      names(stopover.tab)[5:8] <- c("mid_longitude","mid_latitude","duration (h)","radius (m)")
       write.csv(stopover.tab,file = appArtifactPath("stopover_sites.csv"),row.names=FALSE) #csv artefakt
     }
   }
