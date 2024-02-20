@@ -329,7 +329,11 @@ rFunction <- function(data, duration=NULL, radius=NULL,annot=FALSE)
         {
         if (any(names(mt_track_data(datai))=="individual_taxon_canonical_name")) tax <- rep(mt_track_data(datai)$taxon_canonical_name,nr) else tax <- rep(NA,nr)
         }
-      if (any(names(datai)=="sensor_type_id")) senso <- rep(as.character(datai$sensor_type_id)[1],nr) else senso <- rep(NA,nr)
+      if (any(names(mt_track_data(datai))=="sensor_type_ids")) 
+      {
+        dataip <- mt_as_event_attribute(datai,"sensor_type_ids")
+        senso <- rep(as.character(dataip$sensor_type_ids)[1],nr)
+      } else senso <- rep(NA,nr)
       
       if (any(names(res)=="cLong")) LON <- res$cLong else
       {
