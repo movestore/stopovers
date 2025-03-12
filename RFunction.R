@@ -318,9 +318,9 @@ rFunction <- function(data, duration=NULL, radius=NULL,annot=FALSE)
       ARR <- mt_time(datai)[res$iStart]
       DEP <- mt_time(datai)[res$iEnd]
       TR <- rep(unique(mt_track_id(datai)),length(res$iStart))
-      if (any(names(datai)=="individual_local_identifier")) ID <- datai@data$individual_local_identifier[res$iStart] else
+      if (any(names(datai)=="individual_local_identifier")) ID <- as.character(datai$individual_local_identifier[res$iStart]) else
         {
-        if (any(names(datai)=="local_identifier")) ID <- datai@data$local.identifier[res$iStart] else ID <- TR
+        if (any(names(datai)=="local_identifier")) ID <- as.character(datai$local.identifier[res$iStart]) else ID <- TR
         }
       DUR <- res$duration/3600 #in hours
       
